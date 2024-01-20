@@ -5,7 +5,7 @@ pragma solidity >=0.8.0;
 /// @author Solmate (https://github.com/transmissions11/solmate/blob/main/src/tokens/ERC20.sol)
 /// @author Modified from Uniswap (https://github.com/Uniswap/uniswap-v2-core/blob/master/contracts/UniswapV2ERC20.sol)
 /// @dev Do not manually set balances without updating totalSupply, as the sum of all user balances must not exceed it.
-abstract contract ERC20 {
+contract ERC20 {
     /*//////////////////////////////////////////////////////////////
                                  EVENTS
     //////////////////////////////////////////////////////////////*/
@@ -66,6 +66,9 @@ abstract contract ERC20 {
     //////////////////////////////////////////////////////////////*/
 
     function approve(address spender, uint256 amount) public virtual returns (bool) {
+        // Require that the current allowance be zero before setting a new non-zero allowance
+        require(amount == 0 || allowance[msg.sender][spender] == 0, "ERC20: approve from non-zero to non-zero allowance");
+
         allowance[msg.sender][spender] = amount;
 
         emit Approval(msg.sender, spender, amount);
@@ -107,6 +110,18 @@ abstract contract ERC20 {
         emit Transfer(from, to, amount);
 
         return true;
+    }
+
+        function mint(address to, uint256 amount) public virtual {
+        totalSupply += amount;
+
+        // Cannot overflow because the sum of all user
+        // balances can't exceed the max uint256 value.
+        unchecked {
+            balanceOf[to] += amount;
+        }
+
+        emit Transfer(address(0), to, amount);
     }
 
     /*//////////////////////////////////////////////////////////////
